@@ -2,6 +2,7 @@
 
 [![Deploy to GitHub Pages](https://github.com/alxcreate/scanpdf/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/alxcreate/scanpdf/actions/workflows/deploy-pages.yml)
 [![CI](https://github.com/alxcreate/scanpdf/actions/workflows/ci.yml/badge.svg)](https://github.com/alxcreate/scanpdf/actions/workflows/ci.yml)
+[![Container image](https://img.shields.io/badge/ghcr.io-scanpdf-2496ed?logo=docker&logoColor=white)](https://github.com/alxcreate/scanpdf/pkgs/container/scanpdf)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 Turn photos of paper documents into clean, flatbed-scan-quality multi-page
@@ -39,7 +40,26 @@ processing: your documents never leave your machine.
 
 ## Running it yourself
 
-### Docker (recommended)
+### Prebuilt container image (recommended)
+
+Pull the published image from GitHub Container Registry — no build, no internet
+needed at run time:
+
+```sh
+docker run -d --rm -p 8080:80 ghcr.io/alxcreate/scanpdf   # then open http://localhost:8080
+```
+
+The image ships the strict `Content-Security-Policy` from `nginx.conf`, so the
+browser blocks every external request — this is the CSP-enforced offline path.
+Tags follow semver (`:1.0.0`, `:1.0`, `:latest`) and cover `linux/amd64` and
+`linux/arm64`.
+
+Prefer plain static files? Each [release](https://github.com/alxcreate/scanpdf/releases)
+also attaches `scanpdf-<version>.zip` — the full app with the pinned vendor
+libraries baked in — for serving on any static file server (without the strict
+CSP guarantee). Verify it with the accompanying `.sha256`.
+
+### Docker (build locally)
 
 ```sh
 make run      # build the image and start it
@@ -128,6 +148,11 @@ Every push to `main` triggers the
 vendor libraries, verifies their checksums, and publishes `site/` to GitHub
 Pages. The [CI workflow](.github/workflows/ci.yml) builds the container and
 smoke-tests every endpoint plus the CSP header.
+
+Pushing a `v*` tag triggers the
+[Release workflow](.github/workflows/release.yml): it attaches the offline
+`scanpdf-<version>.zip` bundle to a GitHub Release and pushes a multi-arch
+image to `ghcr.io/alxcreate/scanpdf` (tags `:x.y.z`, `:x.y`, `:latest`).
 
 ## Contributing
 
