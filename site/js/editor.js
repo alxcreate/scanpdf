@@ -16,11 +16,18 @@ const LOUPE_R = COARSE ? 78 : 65;
 const LOUPE_OFFSET = COARSE ? 130 : 90;
 const PREVIEW_MAX_SIDE = 900;
 
+// Corner dragging is relative to the grab point, scaled down so the corner
+// moves slower than the finger/cursor — the finger no longer has to sit
+// exactly on the target, which makes precise aiming much easier. Touch is
+// slowed the most since the fingertip hides the corner.
+const DRAG_GAIN_TOUCH = 0.45;
+const DRAG_GAIN_MOUSE = 0.8;
+
 let canvas, ctx, wrap, dropzone, hint, previewCanvas;
 let viewScale = 1; // fullBitmap px -> CSS px
 let viewW = 0;
 let viewH = 0;
-let drag = null; // { index }
+let drag = null; // { index, gain, startX, startY, origViewX, origViewY }
 let lastPageId = null;
 let previewTimer = 0;
 
@@ -190,9 +197,18 @@ function onPointerDown(e) {
     }
   });
   if (index < 0) return;
-  drag = { index };
+  // Anchor on the grab point and the corner's current position; the corner
+  // does not snap under the finger, it only follows scaled-down movement.
+  drag = {
+    index,
+    gain: e.pointerType === 'touch' ? DRAG_GAIN_TOUCH : DRAG_GAIN_MOUSE,
+    startX: e.offsetX,
+    startY: e.offsetY,
+    origViewX: pts[index].x,
+    origViewY: pts[index].y,
+  };
   canvas.setPointerCapture(e.pointerId);
-  moveCorner(page, e);
+  render(); // highlight the handle and show the loupe immediately
 }
 
 function onPointerMove(e) {
@@ -210,9 +226,11 @@ function onPointerUp() {
 
 function moveCorner(page, e) {
   const bmp = page.fullBitmap;
+  const vx = drag.origViewX + (e.offsetX - drag.startX) * drag.gain;
+  const vy = drag.origViewY + (e.offsetY - drag.startY) * drag.gain;
   page.corners[drag.index] = {
-    x: Math.min(Math.max(e.offsetX / viewScale, 0), bmp.width),
-    y: Math.min(Math.max(e.offsetY / viewScale, 0), bmp.height),
+    x: Math.min(Math.max(vx / viewScale, 0), bmp.width),
+    y: Math.min(Math.max(vy / viewScale, 0), bmp.height),
   };
   render();
   schedulePreview();
