@@ -6,10 +6,14 @@ import { cvReady } from './cv-loader.js';
 import { computeOutputSize, warpToCanvas } from './warp.js';
 import { applyFilter, rotateCanvas } from './filters.js';
 
-const HANDLE_R = 10;
-const HIT_R = 24;
-const LOUPE_R = 65;
-const LOUPE_OFFSET = 90;
+// Finger-friendly sizes on touch devices; the loupe sits further from the
+// corner so the dragging finger does not cover it.
+const COARSE = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+const HANDLE_R = COARSE ? 13 : 10;
+const HIT_R = COARSE ? 28 : 24;
+const TOUCH_HIT_R = 40;
+const LOUPE_R = COARSE ? 78 : 65;
+const LOUPE_OFFSET = COARSE ? 130 : 90;
 const PREVIEW_MAX_SIDE = 900;
 
 let canvas, ctx, wrap, dropzone, hint, previewCanvas;
@@ -59,6 +63,9 @@ function onState() {
 function fit() {
   const page = selectedPage();
   if (!page) return;
+  // Zero when the editor pane is display:none (mobile preview mode); the
+  // ResizeObserver fires again with real sizes once the pane reappears.
+  if (wrap.clientWidth === 0 || wrap.clientHeight === 0) return;
   const bmp = page.fullBitmap;
   const availW = Math.max(50, wrap.clientWidth - 32);
   const availH = Math.max(50, wrap.clientHeight - 32);
@@ -174,7 +181,7 @@ function onPointerDown(e) {
   if (!page) return;
   const pts = page.corners.map(toView);
   let index = -1;
-  let best = HIT_R;
+  let best = e.pointerType === 'touch' ? TOUCH_HIT_R : HIT_R;
   pts.forEach((p, i) => {
     const dist = Math.hypot(p.x - e.offsetX, p.y - e.offsetY);
     if (dist <= best) {

@@ -4,10 +4,14 @@ import { state, subscribe, emit } from './state.js';
 
 const THUMB_W = 164;
 
+// On mobile the strip is horizontal, so reorder arrows point left/right.
+const mqMobile = window.matchMedia('(max-width: 767px)');
+
 let list;
 
 export function initPagesUI() {
   list = document.getElementById('pages-list');
+  mqMobile.addEventListener('change', render);
   subscribe(render);
   render();
 }
@@ -74,8 +78,9 @@ function buildItem(page, i) {
 
   const actions = document.createElement('div');
   actions.className = 'page-actions';
-  actions.appendChild(actionBtn('▲', 'Move up', i === 0, () => move(i, -1)));
-  actions.appendChild(actionBtn('▼', 'Move down', i === state.pages.length - 1, () => move(i, 1)));
+  const horiz = mqMobile.matches;
+  actions.appendChild(actionBtn(horiz ? '◀' : '▲', horiz ? 'Move left' : 'Move up', i === 0, () => move(i, -1)));
+  actions.appendChild(actionBtn(horiz ? '▶' : '▼', horiz ? 'Move right' : 'Move down', i === state.pages.length - 1, () => move(i, 1)));
   const del = actionBtn('✕', 'Delete page', false, () => remove(i));
   del.classList.add('del');
   actions.appendChild(del);

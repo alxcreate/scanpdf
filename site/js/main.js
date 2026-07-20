@@ -14,6 +14,7 @@ const MAX_PROC_SIDE = 1000;
 const $ = (id) => document.getElementById(id);
 
 const fileInput = $('file-input');
+const cameraInput = $('camera-input');
 const engineStatus = $('engine-status');
 const saveBtn = $('save-btn');
 const toolbar = $('page-toolbar');
@@ -21,6 +22,8 @@ const filterSelect = $('filter-select');
 const exportOverlay = $('export-overlay');
 const exportStatus = $('export-status');
 const exportBar = $('export-bar');
+
+let layoutEl, viewToggle, viewEditorBtn, viewPreviewBtn;
 
 init();
 
@@ -46,9 +49,16 @@ function init() {
     addFiles(fileInput.files);
     fileInput.value = '';
   });
+  $('camera-btn').addEventListener('click', () => cameraInput.click());
+  cameraInput.addEventListener('change', () => {
+    addFiles(cameraInput.files);
+    cameraInput.value = '';
+  });
+  $('dropzone').addEventListener('click', () => fileInput.click());
 
   setupDragAndDrop();
   setupToolbar();
+  setupViewToggle();
   subscribe(syncControls);
   syncControls();
 }
@@ -227,11 +237,31 @@ function rotate(delta) {
   emit();
 }
 
+/* ---------- Mobile editor/preview toggle ---------- */
+
+function setupViewToggle() {
+  layoutEl = document.querySelector('.layout');
+  viewToggle = $('view-toggle');
+  viewEditorBtn = $('view-editor-btn');
+  viewPreviewBtn = $('view-preview-btn');
+  viewEditorBtn.addEventListener('click', () => setPreviewMode(false));
+  viewPreviewBtn.addEventListener('click', () => setPreviewMode(true));
+}
+
+function setPreviewMode(on) {
+  layoutEl.classList.toggle('show-preview', on);
+  viewEditorBtn.classList.toggle('active', !on);
+  viewPreviewBtn.classList.toggle('active', on);
+  if (on) schedulePreview();
+}
+
 function syncControls() {
   const page = selectedPage();
   toolbar.hidden = !page;
   if (page) filterSelect.value = page.filter;
   saveBtn.disabled = state.pages.length === 0;
+  viewToggle.hidden = state.pages.length === 0;
+  if (state.pages.length === 0) setPreviewMode(false);
   schedulePreview();
 }
 
