@@ -1,0 +1,4 @@
+site/vendor/
+.git/
+*.md
+.DS_Store
