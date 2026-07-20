@@ -140,8 +140,16 @@ select {
 }
 
 .add-buttons { display: flex; flex-direction: column; gap: 8px; }
-.add-btn { width: 100%; padding: 10px; font-weight: 600; }
-.add-btn .btn-icon { margin-right: 6px; }
+.add-btn {
+  width: 100%;
+  padding: 10px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+.add-btn .btn-icon { display: inline-flex; }
 /* Camera capture is only meaningful on touch devices; shown via (pointer: coarse). */
 .camera-btn { display: none; }
 
@@ -417,7 +425,6 @@ select {
   }
   .add-buttons { gap: 6px; flex: 0 0 auto; }
   .add-buttons .btn { flex: 1 1 auto; width: 52px; padding: 0; font-size: 20px; }
-  .add-buttons .btn-icon { margin-right: 0; }
   .add-buttons .btn-label { display: none; }
   .pages-list {
     flex-direction: row;
